@@ -29,8 +29,10 @@ app.post('/guardar', function(req,res) {
     const email = req.body.email
     const comentario = req.body.comentario
 
-    db.run(`INSERT INTO contactos VALUES (${nombre},${email},${comentario})`)
+    db.run(`INSERT INTO contactos VALUES ('${nombre}','${email}','${comentario}')`)
     console.log(req.body.name)
+    console.log(req.body.email)
+    console.log(req.body.comentario)
     res.redirect('/contacto')
 
 })
