@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <table class="Contactos">
+
+        <thead>
+            <tr>
+                <th>fecha y Hora</th>
+
+                <th>Nombre</th>
+
+                <th>Email</th>
+
+                <th>Comentario</th>
+
+                <th>IP</th>
+
+            </tr>
+        </thead>
+
+        <tbody>
+
+            
+                    <% for(let i=0; i<contactos.length; i++) {%>
+                        <tr>
+                      <td><%= contactos[i].fechaHora %></td>
+                      <td><%= contactos[i].nombre %></td>
+                      <td><%= contactos[i].email %></td>
+                      <td><%= contactos[i].comentario %></td>
+                      <td><%= contactos[i].ip %></td>
+                       </tr>
+                    <% } %>
+                
+
+            
+        </tbody>
+    </table>
+
+    <style>
+
+table {
+   width: 100%;
+   border: 1px solid #000;
+}
+th, td {
+   width: 25%;
+   text-align: left;
+   vertical-align: top;
+   border: 1px solid #000;
+   border-collapse: collapse;
+   padding: 0.3em;
+   caption-side: bottom;
+}
+caption {
+   padding: 0.3em;
+}
+    </style>
+</body>
+
+</html>

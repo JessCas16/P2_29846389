@@ -9,7 +9,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 const sqlite3 = require('sqlite3')
 
 const db = new sqlite3.Database('database.sqlite')
-db.run("CREATE TABLE IF NOT EXISTS contactos (nombre VARCHAR, email VARCHAR, comentario TEXT)")
+db.run("CREATE TABLE IF NOT EXISTS contactos (nombre VARCHAR, email VARCHAR, comentario TEXT, ip VARCHAR, fechaHora DATETIME)")
 
 
 
@@ -25,11 +25,12 @@ app.get('/contacto', function(req,res) {
 
 app.post('/guardar', function(req,res) {
     
+    const ip = req.header('x-forwarded-for') || req.socket.remoteAddress
     const nombre = req.body.name
     const email = req.body.email
     const comentario = req.body.comentario
 
-    db.run(`INSERT INTO contactos VALUES ('${nombre}','${email}','${comentario}')`)
+    db.run(`INSERT INTO contactos VALUES ('${nombre}','${email}','${comentario}','${ip}',datetime('now', 'localtime'))`)
     console.log(req.body.name)
     console.log(req.body.email)
     console.log(req.body.comentario)
@@ -37,6 +38,13 @@ app.post('/guardar', function(req,res) {
 
 })
 
+app.get('/contactos', function(req,res) {
+    const contactos = db.all('SELECT * FROM contactos', function(err, rows) {
+        console.log(rows)
+     res.render("contactos", {contactos:rows})
+    })
+    
+})
 
 app.listen(port, () => {
 console.log("Escuchando el puerto "+port)
