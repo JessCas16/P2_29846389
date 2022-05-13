@@ -2,6 +2,7 @@ const express = require("express")
 const bodyParser = require('body-parser')
 const app = express()
 const port = process.env.PORT || '3000'
+const axios = require('axios')
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: false }))
 
@@ -9,7 +10,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 const sqlite3 = require('sqlite3')
 
 const db = new sqlite3.Database('database.sqlite')
-db.run("CREATE TABLE IF NOT EXISTS contactos (nombre VARCHAR, email VARCHAR, comentario TEXT, ip VARCHAR, fechaHora DATETIME)")
+db.run("CREATE TABLE IF NOT EXISTS contactos (nombre VARCHAR, email VARCHAR, comentario TEXT, ip VARCHAR, fechaHora DATETIME, country VARCHAR)")
 
 
 
@@ -23,14 +24,16 @@ app.get('/contacto', function(req,res) {
     res.render("contacto")
 })
 
-app.post('/guardar', function(req,res) {
+app.post('/guardar', async function(req,res) {
     
     const ip = req.header('x-forwarded-for') || req.socket.remoteAddress
     const nombre = req.body.name
     const email = req.body.email
     const comentario = req.body.comentario
+    const geoip = await axios.get(`http://ip-api.com/json/${ip}`)
+    const country = geoip.data.countryCode
 
-    db.run(`INSERT INTO contactos VALUES ('${nombre}','${email}','${comentario}','${ip}',datetime('now', 'localtime'))`)
+    db.run(`INSERT INTO contactos VALUES ('${nombre}','${email}','${comentario}','${ip}',datetime('now', 'localtime'),'${country}')`)
     console.log(req.body.name)
     console.log(req.body.email)
     console.log(req.body.comentario)
