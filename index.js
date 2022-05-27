@@ -3,9 +3,18 @@ const bodyParser = require('body-parser')
 const app = express()
 const port = process.env.PORT || '3000'
 const axios = require('axios')
+const nodemailer = require('nodemailer')
+const { RecaptchaV3 } = require('express-recaptcha')
+const SECRET_KEY = '6LdEnO0fAAAAAI9ipLbp3Ew2CBXEPRBLaS_QzvRI'
+const SITE_KEY = '6LdEnO0fAAAAACySJZCy4Q-vMk_IL6XS1lUSqOT-'
+const recaptcha = new RecaptchaV3(SITE_KEY, SECRET_KEY)
+require('dotenv').config()
+
+const { MAIL_USERNAME, MAIL_PASSWORD } = process.env 
+
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: false }))
-
+app.use(bodyParser.json())
 
 const sqlite3 = require('sqlite3')
 
@@ -16,41 +25,98 @@ db.run("CREATE TABLE IF NOT EXISTS contactos (nombre VARCHAR, email VARCHAR, com
 
 
 
-app.get('/', function(req,res) {
+app.get('/', function (req, res) {
     res.render("curriculum")
 })
 
-app.get('/contacto', function(req,res) {
-    res.render("contacto")
+// app.get('/contacto', recaptcha.middleware.render, function (req, res) {
+//     console.log(res.recaptcha)
+//     res.render("contacto",  { captcha: res.recaptcha })
+
+// })
+
+app.get('/contacto', function (req, res) {
+
+    res.render('contacto', { SITE_KEY, SECRET_KEY })
 })
 
-app.post('/guardar', async function(req,res) {
-    
-    const ip = req.header('x-forwarded-for') || req.socket.remoteAddress
-    const nombre = req.body.name
-    const email = req.body.email
-    const comentario = req.body.comentario
-    const geoip = await axios.get(`http://ip-api.com/json/${ip}`)
-    const country = geoip.data.countryCode
 
-    db.run(`INSERT INTO contactos VALUES ('${nombre}','${email}','${comentario}','${ip}',datetime('now', 'localtime'),'${country}')`)
-    console.log(req.body.name)
-    console.log(req.body.email)
-    console.log(req.body.comentario)
-    res.redirect('/contacto')
-
+app.post('/contacto', recaptcha.middleware.verify, function (req, res) {
+    if (!req.recaptcha.error) {
+        // success code
+    } else {
+        // error code
+    }
 })
 
-app.get('/contactos', function(req,res) {
-    const contactos = db.all('SELECT * FROM contactos', function(err, rows) {
+
+app.post('/guardar', recaptcha.middleware.verify, async function (req, res) {
+    if (!req.recaptcha.error) {
+        // success code
+
+        const ip = req.header('x-forwarded-for') || req.socket.remoteAddress
+        const nombre = req.body.name
+        const email = req.body.email
+        const comentario = req.body.comentario
+        const geoip = await axios.get(`http://ip-api.com/json/${ip}`)
+        const country = geoip.data.countryCode
+
+        db.run(`INSERT INTO contactos VALUES ('${nombre}','${email}','${comentario}','${ip}',datetime('now', 'localtime'),'${country}')`)
+     
+     
+        const from = "programacion2ais@dispostable.com";
+        const message = `
+            Nombre: ${nombre}
+            Correo: ${email}
+            Comentario: ${comentario}
+            Ip: ${ip}
+            Pais: ${country}
+        `;
+        const to = email;
+        console.log({
+            user: MAIL_USERNAME.trim(),
+            pass: MAIL_PASSWORD.trim()
+        })
+        const smtpTransport = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: MAIL_USERNAME.trim(),
+                pass: MAIL_PASSWORD.trim()
+            }
+        });
+        const mailOptions = {
+            from,
+            to, 
+            subject: 'contacto',
+            text: message
+        }
+        smtpTransport.sendMail(mailOptions, function(error, response){
+            if(error){
+                console.log(error);
+            }else{
+                res.redirect('/contacto')
+            }
+        });
+
+        
+
+    } else {
+        // error code
+        res.redirect('/contacto')
+    }
+})
+
+
+app.get('/contactos', function (req, res) {
+    const contactos = db.all('SELECT * FROM contactos', function (err, rows) {
         console.log(rows)
-     res.render("contactos", {contactos:rows})
+        res.render("contactos", { contactos: rows })
     })
-    
+
 })
 
 app.listen(port, () => {
-console.log("Escuchando el puerto "+port)
+    console.log("Escuchando el puerto " + port)
 })
 
 
