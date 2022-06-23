@@ -10,6 +10,15 @@ const SITE_KEY = '6LdEnO0fAAAAACySJZCy4Q-vMk_IL6XS1lUSqOT-'
 const recaptcha = new RecaptchaV3(SITE_KEY, SECRET_KEY)
 require('dotenv').config()
 
+const cookieParser = require('cookie-parser')
+const session = require('express-session')
+
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true
+}))
+
 const { MAIL_USERNAME, MAIL_PASSWORD } = process.env 
 
 app.set('view engine', 'ejs');
@@ -64,7 +73,7 @@ app.post('/guardar', recaptcha.middleware.verify, async function (req, res) {
         db.run(`INSERT INTO contactos VALUES ('${nombre}','${email}','${comentario}','${ip}',datetime('now', 'localtime'),'${country}')`)
      
      
-        const from = "programacion2ais@dispostable.com";
+        const to = "programacion2ais@dispostable.com";
         const message = `
             Nombre: ${nombre}
             Correo: ${email}
@@ -72,7 +81,7 @@ app.post('/guardar', recaptcha.middleware.verify, async function (req, res) {
             Ip: ${ip}
             Pais: ${country}
         `;
-        const to = email;
+        const from = MAIL_USERNAME.trim();
         console.log({
             user: MAIL_USERNAME.trim(),
             pass: MAIL_PASSWORD.trim()
@@ -108,11 +117,30 @@ app.post('/guardar', recaptcha.middleware.verify, async function (req, res) {
 
 
 app.get('/contactos', function (req, res) {
+    if(!req.session.login) { 
+        return res.redirect('/login')
+    }
     const contactos = db.all('SELECT * FROM contactos', function (err, rows) {
         console.log(rows)
         res.render("contactos", { contactos: rows })
     })
 
+})
+
+app.get('/login', function (req, res){
+    res.render('login', { query: req.query })
+})
+
+app.post('/login', function (req, res){
+    const { email, password } = req.body
+   
+    if ( email == 'usuario@gmail.com' && password == '123456'){
+        req.session.login = true
+        res.redirect('/contactos')
+    } else {
+        res.redirect('/login')
+    }
+    
 })
 
 app.listen(port, () => {
