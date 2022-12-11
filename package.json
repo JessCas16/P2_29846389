@@ -15,5 +15,20 @@
     "nodemailer": "^6.7.5",
     "nodemon": "^2.0.15",
     "sqlite3": "^5.0.7"
-  }
+  },
+  "name": "p-ii-evaluacion-1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JessCas16/P2_29846389.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JessCas16/P2_29846389/issues"
+  },
+  "homepage": "https://github.com/JessCas16/P2_29846389#readme",
+  "description": ""
 }
